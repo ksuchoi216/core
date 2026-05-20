@@ -82,15 +82,88 @@ def download_prompt(
     logger.info("Prompt {} downloaded from Langfuse to {}.", prompt_key, prompt_path)
 
 
-def download_prompts_from_prompt_keys(
-    prompt_keys_path="configs/prompt_keys.yaml", local_prompt_dir="prompts"
+def download_prompts_by_prompt_keys(
+    prompt_keys_path="configs/prompt_keys.yaml", prompt_dir="prompts"
 ):
     if not os.path.exists(prompt_keys_path):
         raise FileNotFoundError(f"Prompt list file not found at {prompt_keys_path}")
 
     prompt_keys = load_file(prompt_keys_path)
-    for prompt_key in prompt_keys:
-        download_prompt(prompt_key, prompt_dir=local_prompt_dir)
+    for item in prompt_keys:
+        if isinstance(item, dict):
+            prompt_key = item.get("prompt_key")
+        else:
+            prompt_key = item
+        if not prompt_key:
+            continue
+        try:
+            download_prompt(prompt_key, prompt_dir=prompt_dir)
+        except Exception as e:
+            logger.exception("Failed to download prompt {}: {}", prompt_key, e)
+            prompt_path = _resolve_local_prompt_path(prompt_key, prompt_dir)
+            prompt_path.parent.mkdir(parents=True, exist_ok=True)
+            prompt_path.write_text("", encoding="utf-8")
+
+
+def upload_prompt(
+    prompt_key: str,
+    *,
+    prompt_dir: str | Path | None = "prompts",
+    tags: list[str] | None = None,
+    labels: list[str] | None = None,
+) -> None:
+    try:
+        from langfuse import get_client
+    except ImportError as exc:
+        raise RuntimeError(
+            "Langfuse is required to upload prompt keys. Install langfuse first."
+        ) from exc
+
+    prompt_path = _resolve_local_prompt_path(prompt_key, prompt_dir)
+    if not prompt_path.exists():
+        raise FileNotFoundError(f"Local prompt file not found at {prompt_path}")
+    prompt_text = prompt_path.read_text(encoding="utf-8")
+
+    if labels is None:
+        labels = ["production"]
+
+    get_client().create_prompt(
+        name=prompt_key,
+        prompt=prompt_text,
+        labels=labels,
+        tags=tags,
+        type="text",
+    )
+    logger.info("Prompt {} uploaded from {} to Langfuse.", prompt_key, prompt_path)
+
+
+def upload_prompts_from_local_by_prompt_keys(
+    prompt_keys_path="configs/prompt_keys.yaml",
+    prompt_dir="prompts",
+    tags: list[str] | None = None,
+    labels: list[str] | None = None,
+):
+    if not os.path.exists(prompt_keys_path):
+        raise FileNotFoundError(f"Prompt list file not found at {prompt_keys_path}")
+
+    prompt_keys = load_file(prompt_keys_path)
+    for item in prompt_keys:
+        if isinstance(item, dict):
+            prompt_key = item.get("prompt_key")
+            item_tags = item.get("tags") or tags
+            item_labels = item.get("labels") or labels
+        else:
+            prompt_key = item
+            item_tags = tags
+            item_labels = labels
+        if not prompt_key:
+            continue
+        try:
+            upload_prompt(
+                prompt_key, prompt_dir=prompt_dir, tags=item_tags, labels=item_labels
+            )
+        except Exception as e:
+            logger.exception("Failed to upload prompt {}: {}", prompt_key, e)
 
 
 @observe

@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence, Mapping
 from enum import Enum
 from pathlib import Path
 from typing import Any, Generic, TypeVar
@@ -15,7 +15,23 @@ import inspect
 ArtifactT = TypeVar("ArtifactT")
 
 
-class S3Artifact(Generic[ArtifactT]):
+class BaseArtifact(Generic[ArtifactT]):
+    """Base class defining properties and initialization for an artifact."""
+    
+    artifact_filenames: Sequence[ArtifactT] | type[Any] | None = None
+    required_artifacts: Mapping[ArtifactT, Sequence[ArtifactT]] | None = None
+
+    def __post_init__(self):
+        missing = [
+            name
+            for name in ("artifact_filenames", "required_artifacts")
+            if not hasattr(self, name)
+        ]
+        if missing:
+            raise AttributeError(f"Missing required attribute: {', '.join(missing)}")
+
+
+class Artifact(BaseArtifact[ArtifactT]):
     """Fundamental S3 helpers and managers representing an S3-backed artifact."""
 
     def __init__(
@@ -30,15 +46,6 @@ class S3Artifact(Generic[ArtifactT]):
             download_dir=download_dir,
         )
         self.__post_init__()
-
-    def __post_init__(self):
-        missing = [
-            name
-            for name in ("artifact_filenames", "required_artifacts")
-            if not hasattr(self, name)
-        ]
-        if missing:
-            raise AttributeError(f"Missing required attribute: {', '.join(missing)}")
 
     @property
     def bucket(self) -> str:
@@ -80,11 +87,11 @@ class S3Artifact(Generic[ArtifactT]):
             local_path=self.raw_document_local_path,
         )
 
-    def _artifact_exists_in_s3(self, artifact: ArtifactT) -> bool:
+    def artifact_exists_in_s3(self, artifact: ArtifactT) -> bool:
         return check_file_in_s3(self.bucket, self.artifact_s3_key(artifact))
 
     def _download_artifact_if_required(self, artifact: ArtifactT) -> None:
-        if not self._artifact_exists_in_s3(artifact):
+        if not self.artifact_exists_in_s3(artifact):
             return
 
         local_path = self.artifact_local_path(artifact)
@@ -141,3 +148,18 @@ class S3Artifact(Generic[ArtifactT]):
             local_path=local_path,
         )
         return result
+
+
+class OrderedArtifact(Artifact[ArtifactT]):
+    """Handles ordered step-by-step processing of artifacts."""
+
+    def get_unprocessed_artifacts(self) -> list[ArtifactT]:
+        """Return a list of artifacts that haven't been created in S3 yet."""
+        if self.artifact_filenames is None:
+            return []
+            
+        unprocessed = []
+        for artifact in self.artifact_filenames:
+            if not self.artifact_exists_in_s3(artifact):
+                unprocessed.append(artifact)
+        return unprocessed

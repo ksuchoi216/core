@@ -10,6 +10,7 @@ from core.aws.s3_file_transfer import (
 )
 from core.aws.s3_url import S3Location
 from core.support.file import load_file, save_file
+import inspect
 
 ArtifactT = TypeVar("ArtifactT")
 
@@ -33,7 +34,7 @@ class S3Artifact(Generic[ArtifactT]):
     def __post_init__(self):
         missing = [
             name
-            for name in ("artifact_filenames", "needed_artifacts")
+            for name in ("artifact_filenames", "required_artifacts")
             if not hasattr(self, name)
         ]
         if missing:
@@ -82,7 +83,7 @@ class S3Artifact(Generic[ArtifactT]):
     def _artifact_exists_in_s3(self, artifact: ArtifactT) -> bool:
         return check_file_in_s3(self.bucket, self.artifact_s3_key(artifact))
 
-    def _download_artifact_if_needed(self, artifact: ArtifactT) -> None:
+    def _download_artifact_if_required(self, artifact: ArtifactT) -> None:
         if not self._artifact_exists_in_s3(artifact):
             return
 
@@ -99,21 +100,32 @@ class S3Artifact(Generic[ArtifactT]):
     def create_artifact(
         self, artifact_name: ArtifactT, function: Callable[..., Any], *args, **kwargs
     ) -> Any:
-        """Create an output artifact from its needed artifacts and upload it."""
+        """Create an output artifact from its required artifacts and upload it."""
         is_test = kwargs.get("is_test", False)
         loaded_artifacts = []
-        for needed_artifact in self.needed_artifacts.get(artifact_name, []):
-            self._download_artifact_if_needed(needed_artifact)
-            needed_path = self.artifact_local_path(needed_artifact)
+        for required_artifact in self.required_artifacts.get(artifact_name, []):
+            self._download_artifact_if_required(required_artifact)
+            required_path = self.artifact_local_path(required_artifact)
 
-            if not needed_path.exists():
+            if not required_path.exists():
                 raise FileNotFoundError(
-                    f"Needed artifact not found locally or in S3: "
-                    f"{needed_path} / "
-                    f"s3://{self.bucket}/{self.artifact_s3_key(needed_artifact)}"
+                    f"Required artifact not found locally or in S3: "
+                    f"{required_path} / "
+                    f"s3://{self.bucket}/{self.artifact_s3_key(required_artifact)}"
                 )
 
-            loaded_artifacts.append(load_file(needed_path))
+            loaded_artifacts.append(load_file(required_path))
+
+        sig = inspect.signature(function)
+        if "required_artifacts" in sig.parameters or any(
+            p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+        ):
+            kwargs["required_artifacts"] = {
+                required_artifact: content
+                for required_artifact, content in zip(
+                    self.required_artifacts.get(artifact_name, []), loaded_artifacts
+                )
+            }
 
         result = function(*loaded_artifacts, *args, **kwargs)
         local_path = self.artifact_local_path(artifact_name)

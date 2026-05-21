@@ -1,4 +1,4 @@
-from core.aws.s3_artifacts import S3Artifact
+from core.aws.s3_artifact import S3Artifact
 from core.aws.s3_ordered_artifacts import OrderedArtifact, S3OrderedArtifact
 
 # Backward compatibility aliases

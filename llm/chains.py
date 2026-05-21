@@ -57,8 +57,10 @@ def build_llm(model_config: OpenAINodeConfig) -> ChatOpenAI:
             llm_kwargs["temperature"] = model_config.temperature
 
     if model_config.prompt_cache_key:
-        llm_kwargs["extra_body"] = {"prompt_cache_key": model_config.prompt_cache_key}
-        logger.info("Using prompt_cache_key: %s", model_config.prompt_cache_key)
+        llm_kwargs.setdefault("model_kwargs", {})["prompt_cache_key"] = (
+            model_config.prompt_cache_key
+        )
+        logger.info("Using prompt_cache_key: {}", model_config.prompt_cache_key)
     return ChatOpenAI(**llm_kwargs)
 
 

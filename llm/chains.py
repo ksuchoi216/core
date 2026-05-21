@@ -35,6 +35,7 @@ def build_llm(model_config: OpenAINodeConfig) -> ChatOpenAI:
         "model": model_config.model_name,
         "use_responses_api": model_config.use_responses_api,
     }
+    logger.info("model_name: {}", model_name)
     if model_name in REASONING_MODELS:
         if model_config.temperature is not None:
             raise ValueError("temperature is only supported for non-reasoning models.")

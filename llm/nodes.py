@@ -1,6 +1,6 @@
 """Shared node helpers for LangGraph sessions."""
 
-from __future__ import annotations
+# from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -73,6 +73,8 @@ class GeneralNode:
         self.node_name = node_name or self.prompt_key or "general_node"
         self.return_parallel = return_parallel
         self.iter_key = iter_key
+
+        logger.info("node: {}", self.node_name)
 
     def _preprocess(self) -> None:
         self.prompt, self.parser, self.chain = build_chain(

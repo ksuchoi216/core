@@ -28,26 +28,3 @@ def communicate_s3(
         Path(result) if result else artifact_local_path,
     )
     return result
-
-
-def s3_decorator(artifact_filename: str):
-    def decorator(function: Callable):
-        @wraps(function)
-        def wrapper(*args, **kwargs):
-            bound_args = signature(function).bind_partial(*args, **kwargs)
-            bound_args.apply_defaults()
-
-            s3_location = S3Location(
-                s3_url=bound_args.arguments["s3_url"],
-                artifact_foldername=bound_args.arguments.get(
-                    "artifact_foldername", "artifacts"
-                ),
-                download_dir=bound_args.arguments.get("download_dir", "./temp"),
-            )
-            return communicate_s3(
-                s3_location, artifact_filename, function, *args, **kwargs
-            )
-
-        return wrapper
-
-    return decorator

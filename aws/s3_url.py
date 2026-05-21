@@ -40,11 +40,13 @@ class S3Location:
     bucket: str = field(init=False)
     raw_doc_s3_key: str = field(init=False)
     raw_doc_filename: str = field(init=False)
+    artifact_parent_folder: str = field(init=False)
 
     def __post_init__(self) -> None:
         self.bucket = extract_bucket_from_s3_url(self.s3_url)
         self.raw_doc_s3_key = refine_prefix(self.s3_url, self.bucket)
         self.raw_doc_filename = Path(self.raw_doc_s3_key).name
+        self.artifact_parent_folder = Path(self.raw_doc_s3_key).parent.name
 
     @property
     def local_raw_doc_path(self) -> Path:
@@ -64,7 +66,12 @@ class S3Location:
 
     def artifact_local_path(self, filename: str) -> Path:
         """Local path for a plain artifact filename."""
-        return Path(self.download_dir) / self.artifact_foldername / filename
+        return (
+            Path(self.download_dir)
+            / self.artifact_foldername
+            / self.artifact_parent_folder
+            / filename
+        )
 
     def artifact_s3_key(self, filename: str) -> str:
         """S3 key for a plain artifact filename under the source document."""

@@ -1,31 +1,37 @@
 import json
 import os
 import pickle
-from ast import Set
 from typing import Any
 
-import numpy as np
-import pandas as pd
-import yaml
-from loguru import logger
-from networkx import dfs_labeled_edges
-from nibabel import test
-from sqlalchemy.sql import table
+from pathlib import Path
+
+try:
+    from loguru import logger
+except ModuleNotFoundError:
+    import logging
+
+    logger = logging.getLogger(__name__)
 
 
-def load_file(path) -> Any:
+def load_file(path: str | Path) -> Any:
+    if isinstance(path, Path):
+        path = path.as_posix()
     extension = path.split(".")[-1]
     try:
         if extension == "txt":
             with open(path, "r", encoding="utf-8") as f:
                 loaded_file = f.read()
         elif extension == "csv":
-            with open(path, "r", encoding="utf-8") as f:
+            import pandas as pd
+
+            with open(path, "r", encoding="utf-8-sig") as f:
                 loaded_file = pd.read_csv(f, encoding="utf-8")
         elif extension == "json":
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, "r", encoding="utf-8-sig") as f:
                 loaded_file = json.load(f)
         elif extension == "yaml":
+            import yaml
+
             with open(path, "r", encoding="utf-8") as f:
                 loaded_file = yaml.safe_load(f)
         elif extension == "pkl":
@@ -43,7 +49,9 @@ def load_file(path) -> Any:
         ) from e
 
 
-def save_file(data: Any, path: str):
+def save_file(data: Any, path: str | Path):
+    if isinstance(path, Path):
+        path = path.as_posix()
     parent_dir = os.path.dirname(path)
     if not os.path.exists(parent_dir):
         os.makedirs(parent_dir)
@@ -55,6 +63,8 @@ def save_file(data: Any, path: str):
             with open(path, "w", encoding="utf-8-sig") as f:
                 f.write(data)
         elif extension == "csv":
+            import pandas as pd
+
             if isinstance(data, pd.DataFrame):
                 with open(path, "w", encoding="utf-8-sig") as f:
                     data.to_csv(f, index=False, encoding="utf-8-sig")
@@ -66,12 +76,16 @@ def save_file(data: Any, path: str):
             with open(path, "w", encoding="utf-8-sig") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
         elif extension == "yaml":
+            import yaml
+
             with open(path, "w", encoding="utf-8-sig") as f:
                 yaml.dump(data, f, allow_unicode=True, sort_keys=False)
         elif extension == "pkl":
             with open(path, "wb") as f:
                 pickle.dump(data, f)
         elif extension in ["npy", "npz"]:
+            import numpy as np
+
             np.save(path, data)
         else:
             raise ValueError(

@@ -10,7 +10,7 @@ from langchain_openai import ChatOpenAI
 from loguru import logger
 from pydantic import BaseModel
 
-from .config import OpenAINodeConfig
+from core.support.config import OpenAINodeConfig
 from .langfuse import load_prompt
 from .models import REASONING_MODELS, ModelNames
 
@@ -35,6 +35,7 @@ def build_llm(model_config: OpenAINodeConfig) -> ChatOpenAI:
         "model": model_config.model_name,
         "use_responses_api": model_config.use_responses_api,
     }
+    logger.info("model_name: {}", model_name)
     if model_name in REASONING_MODELS:
         if model_config.temperature is not None:
             raise ValueError("temperature is only supported for non-reasoning models.")
@@ -56,8 +57,10 @@ def build_llm(model_config: OpenAINodeConfig) -> ChatOpenAI:
             llm_kwargs["temperature"] = model_config.temperature
 
     if model_config.prompt_cache_key:
-        llm_kwargs["extra_body"] = {"prompt_cache_key": model_config.prompt_cache_key}
-        logger.info("Using prompt_cache_key: %s", model_config.prompt_cache_key)
+        llm_kwargs.setdefault("model_kwargs", {})["prompt_cache_key"] = (
+            model_config.prompt_cache_key
+        )
+        logger.info("Using prompt_cache_key: {}", model_config.prompt_cache_key)
     return ChatOpenAI(**llm_kwargs)
 
 
@@ -92,6 +95,7 @@ def build_chain(
     *,
     model_config: OpenAINodeConfig,
     prompt_key: str,
+    local_prompt: bool = False,
     local_prompt_dir: str | Path | None = None,
     output_parser=None,
     is_chat: bool = False,
@@ -100,6 +104,7 @@ def build_chain(
 ):
     prompt = load_prompt(
         prompt_key,
+        local_prompt=local_prompt,
         prompt_dir=local_prompt_dir,
     )
     llm = build_bound_llm(
@@ -112,7 +117,7 @@ def build_chain(
     if is_chat:
         chain = llm | parser
     else:
-        prompter = PromptTemplate.from_template(self.prompt)
+        prompter = PromptTemplate.from_template(prompt)
         chain = prompter | llm | parser
 
     return prompt, parser, chain

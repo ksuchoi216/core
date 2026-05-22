@@ -13,7 +13,7 @@ from pandas import read_table
 from pydantic import BaseModel
 
 from .chains import build_chain
-from .langfuse import load_prompt
+from core.langfuse import load_prompt
 from core.support.config import OpenAINodeConfig
 import time
 

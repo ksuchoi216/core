@@ -11,7 +11,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from core.support.config import OpenAINodeConfig
-from .langfuse import load_prompt
+from core.langfuse import load_prompt
 from .models import REASONING_MODELS, ModelNames
 
 ParserType = PydanticOutputParser | StrOutputParser

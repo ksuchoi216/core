@@ -1,7 +1,7 @@
 import argparse
 from dotenv import find_dotenv, load_dotenv
 
-from core.llm.langfuse import create_prompt_keys_from_local_prompt_dir
+from core.langfuse import create_prompt_keys_from_local_prompt_dir
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create prompt keys from local prompt directory")

@@ -210,6 +210,27 @@ def upload_prompts_from_local(
             logger.exception("Failed to upload prompt {}: {}", prompt_key, e)
 
 
+def change_project_keys_from_env(project_name: str) -> None:
+    """
+    Update Langfuse environment variables from project-specific environment variables.
+    For example, if project_name is "DOCUMENT", it will set LANGFUSE_SECRET_KEY to
+    the value of LANGFUSE_SECRET_KEY_DOCUMENT.
+    """
+    suffix = f"_{project_name.upper()}"
+    
+    keys_to_update = [
+        "LANGFUSE_SECRET_KEY",
+        "LANGFUSE_PUBLIC_KEY",
+        "LANGFUSE_BASE_URL",
+        "LANGFUSE_HOST"
+    ]
+    
+    for key in keys_to_update:
+        project_key = f"{key}{suffix}"
+        if project_key in os.environ:
+            os.environ[key] = os.environ[project_key]
+
+
 @observe
 def run_graph_with_langfuse(
     graph,

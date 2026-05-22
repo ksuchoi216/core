@@ -41,13 +41,17 @@ class GeneralNode:
         self,
         *,
         model_config: OpenAINodeConfig,
-        override_input: Callable[[dict], dict[str, Any] | None],
+        state_to_input: Callable[[dict], dict[str, Any] | None],
         state_save_key: str,
         prompt_key: str,
+        is_batch: bool = False,
+        input_to_batch_input: (
+            Callable[[dict[str, Any]], Sequence[dict[str, Any]]] | None
+        ) = None,
         local_prompt: bool = True,
         local_prompt_dir: str | Path = "prompts",
-        update_state_for_input: Callable[[dict], dict[str, Any]] | None = None,
-        update_state_from_output: Callable[[Any, dict], dict[str, Any]] | None = None,
+        prepare_state: Callable[[dict], dict[str, Any]] | None = None,
+        output_to_state: Callable[[Any, dict], dict[str, Any]] | None = None,
         node_name: str | None = None,
         output_parser=None,
         tools: Sequence[Any] | None = None,
@@ -59,11 +63,13 @@ class GeneralNode:
     ) -> None:
         self.model_config = model_config
         self.prompt_key = prompt_key
+        self.is_batch = is_batch
+        self.input_to_batch_input = input_to_batch_input
         self.local_prompt = local_prompt
         self.local_prompt_dir = local_prompt_dir
-        self.override_input = override_input
-        self.update_state_for_input = update_state_for_input
-        self.update_state_from_output = update_state_from_output
+        self.state_to_input = state_to_input
+        self.prepare_state = prepare_state
+        self.output_to_state = output_to_state
         self.output_parser = output_parser
         self.tools = tools
         self.tool_choice = tool_choice
@@ -87,17 +93,17 @@ class GeneralNode:
             tool_choice=self.tool_choice,
         )
 
-    def _update_state_for_input(self, state: dict[str, Any]) -> dict[str, Any]:
-        if self.update_state_for_input is None:
+    def _prepare_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        if self.prepare_state is None:
             return state
 
-        state_update = self.update_state_for_input(state)
+        state_update = self.prepare_state(state)
         if not isinstance(state_update, Mapping):
-            raise TypeError("update_state_for_input must return a mapping.")
+            raise TypeError("prepare_state must return a mapping.")
         state.update(state_update)
         return state
 
-    def _update_state_from_output(
+    def _output_to_state(
         self,
         *,
         state: dict[str, Any],
@@ -105,10 +111,10 @@ class GeneralNode:
     ) -> dict[str, Any]:
         output = _normalize_output_value(output)
 
-        if self.update_state_from_output is not None:
-            state_update = self.update_state_from_output(output, state)
+        if self.output_to_state is not None:
+            state_update = self.output_to_state(output, state)
             if not isinstance(state_update, Mapping):
-                raise TypeError("update_state_from_output must return a mapping.")
+                raise TypeError("output_to_state must return a mapping.")
             logger.info("AI Answer:\n{}\n", output)
             state.update(state_update)
             return state
@@ -119,12 +125,45 @@ class GeneralNode:
             return {self.state_save_key: output}
 
         if self.state_type == "list":
-            state.setdefault(self.state_save_key, []).append(output)
+            if isinstance(output, list):
+                state.setdefault(self.state_save_key, []).extend(output)
+            else:
+                state.setdefault(self.state_save_key, []).append(output)
         elif self.state_type == "dict":
             state.setdefault(self.state_save_key, {})[self.state_dict_key] = output
         else:
             state[self.state_save_key] = output
         return state
+
+    def _add_format_instructions(self, inputs: dict[str, Any]) -> dict[str, Any]:
+        resolved = dict(inputs)
+        if isinstance(self.parser, PydanticOutputParser):
+            resolved["format_instructions"] = self.parser.get_format_instructions()
+        return resolved
+
+    def batch(
+        self, inputs: dict[str, Any], config: RunnableConfig | None = None
+    ) -> Any:
+        if self.input_to_batch_input is None:
+            raise ValueError(
+                "input_to_batch_input must be provided when is_batch is True."
+            )
+
+        batch_inputs = self.input_to_batch_input(inputs)
+        if not isinstance(batch_inputs, Sequence) or isinstance(
+            batch_inputs, (str, bytes)
+        ):
+            raise TypeError("input_to_batch_input must return a sequence of mappings.")
+
+        resolved_inputs_list = [
+            self._add_format_instructions(inp) for inp in batch_inputs
+        ]
+        return self.chain.batch(resolved_inputs_list, config=config)
+
+    def invoke(
+        self, inputs: dict[str, Any], config: RunnableConfig | None = None
+    ) -> Any:
+        return self.chain.invoke(self._add_format_instructions(inputs), config=config)
 
     def __call__(self):
         self._preprocess()
@@ -133,24 +172,25 @@ class GeneralNode:
             state: dict[str, Any],
             config: RunnableConfig | None = None,
         ) -> dict[str, Any]:
-            state = self._update_state_for_input(state)
+            state = self._prepare_state(state)
             logger.info("============= {} ==============", self.node_name)
 
-            inputs = self.override_input(state) or {}
+            inputs = self.state_to_input(state)
+            if inputs is None:
+                inputs = {}
+
             if not isinstance(inputs, Mapping):
-                raise TypeError("override_input must return a mapping or None.")
+                raise TypeError("state_to_input must return a mapping or None.")
 
-            resolved_inputs = dict(inputs)
-            if isinstance(self.parser, PydanticOutputParser):
-                resolved_inputs["format_instructions"] = (
-                    self.parser.get_format_instructions()
-                )
+            if self.is_batch:
+                output = self.batch(dict(inputs), config=config)
+            else:
+                output = self.invoke(dict(inputs), config=config)
 
-            output = self.chain.invoke(resolved_inputs, config=config)
             if self.iter_key:
                 state[self.iter_key] += 1
                 logger.info("Iter: {} from {}", state[self.iter_key], self.iter_key)
 
-            return self._update_state_from_output(state=state, output=output)
+            return self._output_to_state(state=state, output=output)
 
         return node

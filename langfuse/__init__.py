@@ -12,6 +12,7 @@ from .prompt import (
 )
 from .run import (
     run_graph_with_langfuse,
+    run_generator_with_langfuse,
     run_with_langfuse,
 )
 
@@ -25,5 +26,6 @@ __all__ = [
     "upload_prompts_from_local",
     "change_project_keys_from_env",
     "run_graph_with_langfuse",
+    "run_generator_with_langfuse",
     "run_with_langfuse",
 ]

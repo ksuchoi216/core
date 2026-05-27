@@ -14,6 +14,22 @@ def create_dataset(name: str, description: str, metadata: dict):
     return dataset
 
 
+def create_dataset_item(
+    dataset_name: str,
+    input_text: str,
+    expected_output_text: str,
+    metadata: dict | None = None,
+):
+    langfuse = Langfuse()
+    langfuse.create_dataset_item(
+        dataset_name=dataset_name,
+        input={"text": input_text},
+        expected_output={"text": expected_output_text},
+        metadata=metadata,
+    )
+    logger.info("Dataset item created: {}", input_text)
+
+
 @dataclass
 class DatasetItem:
     input: dict

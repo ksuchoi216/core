@@ -1,4 +1,5 @@
 from typing import Any
+import re
 
 
 def _get_example_items_by_depth(data: Any) -> dict[int, Any]:
@@ -350,3 +351,58 @@ def convert_data_to_text(
     while lines and lines[-1] == "":
         lines.pop()
     return "\n".join(lines)
+
+
+def split_text_by_markdown_header(text: str, header: str = "##") -> list[str]:
+    """
+    Markdown text를 특정 header 기준으로 분리한다.
+
+    Rules:
+    - 지정한 header는 유지
+    - 지정한 header보다 상위 header는 제거
+    - 하위 header는 유지
+
+    Example:
+        header="###"
+
+        제거:
+            #
+            ##
+
+        유지:
+            ###
+            ####
+            #####
+
+    Returns:
+        list[str]
+    """
+
+    target_level = len(header)
+
+    filtered_lines = []
+
+    for line in text.splitlines():
+        stripped = line.lstrip()
+
+        if stripped.startswith("#"):
+            current_level = len(stripped) - len(stripped.lstrip("#"))
+
+            # 상위 header 제거
+            if current_level < target_level:
+                continue
+
+        filtered_lines.append(line)
+
+    filtered_text = "\n".join(filtered_lines)
+
+    escaped_header = re.escape(header)
+
+    # header 유지하면서 split
+    pattern = rf"(?m)(?=^{escaped_header}\s+)"
+
+    sections = re.split(pattern, filtered_text)
+
+    return [
+        section.strip() for section in sections if section.strip().startswith(header)
+    ]

@@ -88,7 +88,7 @@ def download_from_s3(
     try:
         s3.download_file(Bucket=bucket, Key=resolved_prefix, Filename=str(local_path))
         logger.info(
-            "Downloaded from s3://%s/%s to %s", bucket, resolved_prefix, local_path
+            "Downloaded from s3://{}/{} to {}", bucket, resolved_prefix, local_path
         )
         return local_path
     except Exception as e:

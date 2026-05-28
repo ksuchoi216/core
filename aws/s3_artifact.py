@@ -17,7 +17,7 @@ ArtifactT = TypeVar("ArtifactT")
 
 class BaseArtifact(Generic[ArtifactT]):
     """Base class defining properties and initialization for an artifact."""
-    
+
     artifact_filenames: Sequence[ArtifactT] | type[Any] | None = None
     required_artifacts: Mapping[ArtifactT, Sequence[ArtifactT]] | None = None
 
@@ -37,13 +37,15 @@ class Artifact(BaseArtifact[ArtifactT]):
     def __init__(
         self,
         s3_url: str,
-        artifact_foldername: str = "artifacts",
-        download_dir: str = "./temp",
+        artifact_foldername: str | None = None,
+        download_dir: str | None = None,
+        config: Any = None,
     ) -> None:
         self._s3 = S3Location(
             s3_url=s3_url,
             artifact_foldername=artifact_foldername,
             download_dir=download_dir,
+            config=config,
         )
         self.__post_init__()
 
@@ -108,7 +110,7 @@ class Artifact(BaseArtifact[ArtifactT]):
         self, artifact_name: ArtifactT, function: Callable[..., Any], *args, **kwargs
     ) -> Any:
         """Create an output artifact from its required artifacts and upload it."""
-        is_test = kwargs.get("is_test", False)
+        upload = kwargs.pop("upload", True)
         loaded_artifacts = []
         for required_artifact in self.required_artifacts.get(artifact_name, []):
             self._download_artifact_if_required(required_artifact)
@@ -139,7 +141,7 @@ class Artifact(BaseArtifact[ArtifactT]):
         s3_key = self.artifact_s3_key(artifact_name)
 
         save_file(result, local_path)
-        if is_test:
+        if not upload:
             return result
 
         upload_to_s3(
@@ -157,7 +159,7 @@ class OrderedArtifact(Artifact[ArtifactT]):
         """Return a list of artifacts that haven't been created in S3 yet."""
         if self.artifact_filenames is None:
             return []
-            
+
         unprocessed = []
         for artifact in self.artifact_filenames:
             if not self.artifact_exists_in_s3(artifact):

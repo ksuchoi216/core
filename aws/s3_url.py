@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 from core.aws.s3_file_transfer import download_from_s3
 
@@ -35,14 +36,45 @@ class S3Location:
     """
 
     s3_url: str
-    artifact_foldername: str = "artifacts"
-    download_dir: str = "./temp"
+    artifact_foldername: str | None = None
+    download_dir: str | None = None
+    config: Any = None
     bucket: str = field(init=False)
     raw_doc_s3_key: str = field(init=False)
     raw_doc_filename: str = field(init=False)
     artifact_parent_folder: str = field(init=False)
 
     def __post_init__(self) -> None:
+        # Ensure config is not None by loading default if necessary
+        if self.config is None:
+            try:
+                from core.support.config import load_config
+
+                configs_dir = Path(__file__).parent.parent.parent / "configs"
+                self.config = load_config(configs_dir)
+            except Exception:
+                try:
+                    from core.support.config import load_general_config
+
+                    config_path = (
+                        Path(__file__).parent.parent.parent / "configs" / "general.yaml"
+                    )
+                    self.config = load_general_config(config_path)
+                except Exception:
+                    from types import SimpleNamespace
+
+                    self.config = SimpleNamespace()
+
+        # Resolve config-based defaults
+        config_artifact_foldername = getattr(self.config, "artifact_foldername", None)
+        config_download_dir = getattr(self.config, "download_dir", None)
+
+        # Assign resolved values or fallback to hardcoded defaults
+        if self.artifact_foldername is None:
+            self.artifact_foldername = config_artifact_foldername or "artifacts"
+        if self.download_dir is None:
+            self.download_dir = config_download_dir or "./temp"
+
         self.bucket = extract_bucket_from_s3_url(self.s3_url)
         self.raw_doc_s3_key = refine_prefix(self.s3_url, self.bucket)
         self.raw_doc_filename = Path(self.raw_doc_s3_key).name

@@ -93,4 +93,4 @@ def save_file(data: Any, path: str | Path):
             )
         logger.info(f"Saved file to: {path}")
     except Exception as e:
-        logger.exception("Error saving file to %s", path)
+        logger.exception(f"Error saving file to {path}")

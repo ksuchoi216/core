@@ -11,6 +11,7 @@ class ModelNames(Enum):
     gpt_54_mini = "gpt-5.4-mini"
     gpt_54 = "gpt-5.4"
     # gpt_54_pro = "gpt-5.4-pro" # too expensive
+    gpt_55_nano = "gpt-5.5-nano"
     gpt_55_mini = "gpt-5.5-mini"
     gpt_55 = "gpt-5.5"
     # gpt_55_pro = "gpt-5.5-pro" # too expensive

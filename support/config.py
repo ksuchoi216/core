@@ -41,9 +41,6 @@ class OpenAIConfigCollection(dict[str, Any]):
         return sorted(set(super().__dir__()) | set(self.keys()))
 
 
-
-
-
 def to_namespace(value: Any) -> Any:
     if isinstance(value, dict):
         return SimpleNamespace(
@@ -70,7 +67,9 @@ def _parse_model_session(session_name: str, data: Any) -> OpenAIConfigCollection
 
 def _apply_test_model_names(config: Any) -> None:
     if isinstance(config, OpenAINodeConfig):
-        if not config.model_name.endswith("-mini"):
+        if not (
+            config.model_name.endswith("-mini") or config.model_name.endswith("-nano")
+        ):
             config.model_name = f"{config.model_name}-mini"
         return
 

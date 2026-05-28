@@ -107,7 +107,11 @@ class Artifact(BaseArtifact[ArtifactT]):
         )
 
     def create_artifact(
-        self, artifact_name: ArtifactT, function: Callable[..., Any], *args, **kwargs
+        self,
+        artifact_name: ArtifactT,
+        function: Callable[..., Any],
+        *args,
+        **kwargs,
     ) -> Any:
         """Create an output artifact from its required artifacts and upload it."""
         upload = kwargs.pop("upload", True)

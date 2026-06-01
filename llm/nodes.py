@@ -12,7 +12,7 @@ from langchain_core.runnables import RunnableConfig
 from loguru import logger
 
 from .chains import build_chain
-from core.support.config import OpenAINodeConfig
+from core.support.config import LLMNodeConfig
 
 load_dotenv(find_dotenv(usecwd=True))
 
@@ -40,7 +40,7 @@ class GeneralNode:
     def __init__(
         self,
         *,
-        model_config: OpenAINodeConfig,
+        model_config: LLMNodeConfig,
         state_to_input: Callable[[dict], dict[str, Any] | None],
         state_save_key: str,
         prompt_key: str,
@@ -49,7 +49,7 @@ class GeneralNode:
             Callable[[dict[str, Any]], Sequence[dict[str, Any]]] | None
         ) = None,
         local_prompt: bool = True,
-        local_prompt_dir: str | Path = "prompts",
+        local_prompt_dir: str | Path | None = None,
         prepare_state: Callable[[dict], dict[str, Any]] | None = None,
         output_to_state: Callable[[Any, dict], dict[str, Any]] | None = None,
         node_name: str | None = None,

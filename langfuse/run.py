@@ -14,8 +14,13 @@ def _resolve_user_id(user_id: str | None) -> str:
     return DEFAULT_USER_ID if user_id is None else user_id
 
 
-def _create_langfuse_config() -> dict[str, list[CallbackHandler]]:
-    return {"callbacks": [CallbackHandler()]}
+def _create_langfuse_config(
+    *, max_concurrency: int | None = None
+) -> dict[str, Any]:
+    config: dict[str, Any] = {"callbacks": [CallbackHandler()]}
+    if max_concurrency is not None:
+        config["max_concurrency"] = max_concurrency
+    return config
 
 
 @observe
@@ -27,8 +32,10 @@ def run_graph_with_langfuse(
     session_id,
     user_id: str | None = None,
     tags: list[str] | None = None,
+    max_concurrency: int | None = None,
 ):
-    configured_graph = graph.with_config(_create_langfuse_config())
+    langfuse_config = _create_langfuse_config(max_concurrency=max_concurrency)
+    configured_graph = graph.with_config(langfuse_config)
     resolved_user_id = _resolve_user_id(user_id)
 
     is_batch = isinstance(state, list)
@@ -60,8 +67,9 @@ def run_generator_with_langfuse(
     session_id,
     user_id: str | None = None,
     tags: list[str] | None = None,
+    max_concurrency: int | None = None,
 ):
-    langfuse_config = _create_langfuse_config()
+    langfuse_config = _create_langfuse_config(max_concurrency=max_concurrency)
     resolved_user_id = _resolve_user_id(user_id)
 
     is_batch = isinstance(input_data, list)
@@ -90,6 +98,7 @@ def run_with_langfuse(
     session_id,
     user_id: str | None = None,
     tags: list[str] | None = None,
+    max_concurrency: int | None = None,
 ):
     is_graph = type(run_func).__name__ in ("CompiledGraph", "CompiledStateGraph")
     langfuse_runner = (
@@ -103,4 +112,5 @@ def run_with_langfuse(
         session_id=session_id,
         user_id=user_id,
         tags=tags,
+        max_concurrency=max_concurrency,
     )

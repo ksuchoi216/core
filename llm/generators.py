@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from .chains import build_chain
 from core.langfuse import load_prompt
-from core.support.config import OpenAINodeConfig
+from core.support.config import LLMNodeConfig
 import time
 
 load_dotenv(find_dotenv(usecwd=True))
@@ -36,7 +36,7 @@ class PromptGenerator:
     def __init__(
         self,
         *,
-        model_config: OpenAINodeConfig,
+        model_config: LLMNodeConfig,
         prompt_key: str,
         local_prompt_dir: str | Path | None = None,
         output_parser: type[BaseModel] | None = None,
@@ -140,7 +140,7 @@ class ChatGenerator(PromptGenerator):
     def __init__(
         self,
         *,
-        model_config: OpenAINodeConfig,
+        model_config: LLMNodeConfig,
         system_prompt_key: str,
         human_prompt_key: str,
         local_prompt_dir: str | Path | None = None,

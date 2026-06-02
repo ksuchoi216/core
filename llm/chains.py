@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Any
 
 from langchain_anthropic import ChatAnthropic
+import re
 from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
+from langchain_core.outputs import Generation
 from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from loguru import logger
@@ -132,13 +134,48 @@ def build_bound_llm(
     return llm.bind_tools(list(tools), **bind_kwargs)
 
 
+class CleanPydanticOutputParser(PydanticOutputParser):
+    def parse(self, text: str) -> Any:
+        cleaned = text.strip()
+        tags = ["pydantic_output_format", "format_instructions", "json"]
+        for tag in tags:
+            start_tag = f"<{tag}>"
+            end_tag = f"</{tag}>"
+            match = re.search(rf"{start_tag}(.*?){end_tag}", cleaned, re.DOTALL | re.IGNORECASE)
+            if match:
+                cleaned = match.group(1).strip()
+                break
+            else:
+                cleaned = re.sub(rf"^{start_tag}", "", cleaned, flags=re.IGNORECASE).strip()
+                cleaned = re.sub(rf"{end_tag}$", "", cleaned, flags=re.IGNORECASE).strip()
+        return super().parse(cleaned)
+
+    def parse_result(self, result: list[Generation], *, partial: bool = False) -> Any:
+        for r in result:
+            if hasattr(r, "text"):
+                cleaned = r.text.strip()
+                tags = ["pydantic_output_format", "format_instructions", "json"]
+                for tag in tags:
+                    start_tag = f"<{tag}>"
+                    end_tag = f"</{tag}>"
+                    match = re.search(rf"{start_tag}(.*?){end_tag}", cleaned, re.DOTALL | re.IGNORECASE)
+                    if match:
+                        cleaned = match.group(1).strip()
+                        break
+                    else:
+                        cleaned = re.sub(rf"^{start_tag}", "", cleaned, flags=re.IGNORECASE).strip()
+                        cleaned = re.sub(rf"{end_tag}$", "", cleaned, flags=re.IGNORECASE).strip()
+                r.text = cleaned
+        return super().parse_result(result, partial=partial)
+
+
 def build_output_parser(output_parser) -> ParserType:
     if isinstance(output_parser, type) and issubclass(output_parser, BaseModel):
         logger.info(
             "Using PydanticOutputParser with model: {}",
             output_parser.__name__,
         )
-        return PydanticOutputParser(pydantic_object=output_parser)
+        return CleanPydanticOutputParser(pydantic_object=output_parser)
     logger.info("Using StrOutputParser for output parsing.")
     return StrOutputParser()
 

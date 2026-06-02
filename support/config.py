@@ -170,9 +170,14 @@ def _apply_test_model_names(config: Any) -> None:
             config.model_name = f"{config.model_name}-mini"
         return
 
-    # Claude model names have no cheaper "-mini"/"-nano" variant to swap in for
-    # tests, so leave them unchanged.
     if isinstance(config, ClaudeNodeConfig):
+        if "opus" in config.model_name:
+            config.model_name = "claude-haiku-4-5"
+            config.thinking = ClaudeThinkingConfig(
+                type="enabled",
+                budget_tokens=1024,
+            )
+            config.output_config = None
         return
 
     if isinstance(config, dict):

@@ -36,7 +36,9 @@ def load_file(path: str | Path) -> Any:
 
             df = pd.read_csv(path, encoding="utf-8-sig")
             df = df.map(to_nfc) if hasattr(df, "map") else df.applymap(to_nfc)
-            df.columns = [to_nfc(col) if isinstance(col, str) else col for col in df.columns]
+            df.columns = [
+                to_nfc(col) if isinstance(col, str) else col for col in df.columns
+            ]
             loaded_file = df
         elif extension == "json":
             with open(path, "r", encoding="utf-8-sig") as f:
@@ -89,9 +91,15 @@ def save_file(data: Any, path: str | Path):
                         return {to_nfc(k): to_nfc(v) for k, v in val.items()}
                     return val
 
-                data = data.map(to_nfc) if hasattr(data, "map") else data.applymap(to_nfc)
-                data.columns = [to_nfc(col) if isinstance(col, str) else col for col in data.columns]
-                data.to_csv(path, index=False, encoding="utf-8-sig")
+                data = (
+                    data.map(to_nfc) if hasattr(data, "map") else data.applymap(to_nfc)
+                )
+                data.columns = [
+                    to_nfc(col) if isinstance(col, str) else col for col in data.columns
+                ]
+                data.to_csv(
+                    path, index=False, encoding="utf-8-sig", lineterminator="\r\n"
+                )
             else:
                 raise ValueError(
                     "Data must be a pandas DataFrame for CSV format.",

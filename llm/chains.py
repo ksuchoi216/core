@@ -75,9 +75,9 @@ def build_openai_llm(model_config: OpenAINodeConfig) -> ChatOpenAI:
             llm_kwargs["temperature"] = model_config.temperature
 
     if model_config.prompt_cache_key:
-        llm_kwargs.setdefault("model_kwargs", {})[
-            "prompt_cache_key"
-        ] = model_config.prompt_cache_key
+        llm_kwargs.setdefault("model_kwargs", {})["prompt_cache_key"] = (
+            model_config.prompt_cache_key
+        )
         logger.info("Using prompt_cache_key: {}", model_config.prompt_cache_key)
 
     llm_kwargs["callbacks"] = [CacheUsageLogger(label=model_config.model_name)]
@@ -141,13 +141,19 @@ class CleanPydanticOutputParser(PydanticOutputParser):
         for tag in tags:
             start_tag = f"<{tag}>"
             end_tag = f"</{tag}>"
-            match = re.search(rf"{start_tag}(.*?){end_tag}", cleaned, re.DOTALL | re.IGNORECASE)
+            match = re.search(
+                rf"{start_tag}(.*?){end_tag}", cleaned, re.DOTALL | re.IGNORECASE
+            )
             if match:
                 cleaned = match.group(1).strip()
                 break
             else:
-                cleaned = re.sub(rf"^{start_tag}", "", cleaned, flags=re.IGNORECASE).strip()
-                cleaned = re.sub(rf"{end_tag}$", "", cleaned, flags=re.IGNORECASE).strip()
+                cleaned = re.sub(
+                    rf"^{start_tag}", "", cleaned, flags=re.IGNORECASE
+                ).strip()
+                cleaned = re.sub(
+                    rf"{end_tag}$", "", cleaned, flags=re.IGNORECASE
+                ).strip()
         return super().parse(cleaned)
 
     def parse_result(self, result: list[Generation], *, partial: bool = False) -> Any:
@@ -158,13 +164,21 @@ class CleanPydanticOutputParser(PydanticOutputParser):
                 for tag in tags:
                     start_tag = f"<{tag}>"
                     end_tag = f"</{tag}>"
-                    match = re.search(rf"{start_tag}(.*?){end_tag}", cleaned, re.DOTALL | re.IGNORECASE)
+                    match = re.search(
+                        rf"{start_tag}(.*?){end_tag}",
+                        cleaned,
+                        re.DOTALL | re.IGNORECASE,
+                    )
                     if match:
                         cleaned = match.group(1).strip()
                         break
                     else:
-                        cleaned = re.sub(rf"^{start_tag}", "", cleaned, flags=re.IGNORECASE).strip()
-                        cleaned = re.sub(rf"{end_tag}$", "", cleaned, flags=re.IGNORECASE).strip()
+                        cleaned = re.sub(
+                            rf"^{start_tag}", "", cleaned, flags=re.IGNORECASE
+                        ).strip()
+                        cleaned = re.sub(
+                            rf"{end_tag}$", "", cleaned, flags=re.IGNORECASE
+                        ).strip()
                 r.text = cleaned
         return super().parse_result(result, partial=partial)
 

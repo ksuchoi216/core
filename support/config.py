@@ -5,7 +5,14 @@ from functools import lru_cache
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Annotated, Any, Literal, Union
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    model_validator,
+)
 
 from core.llm.models import CLAUDE_ADAPTIVE_THINKING_MODELS
 from core.support.file import load_file
@@ -85,9 +92,7 @@ class ClaudeNodeConfig(BaseModel):
             if self.thinking.budget_tokens >= self.max_tokens:
                 raise ValueError("thinking.budget_tokens must be less than max_tokens.")
 
-        if (
-            self.model_name in CLAUDE_ADAPTIVE_THINKING_MODELS
-        ):
+        if self.model_name in CLAUDE_ADAPTIVE_THINKING_MODELS:
             if self.thinking.type == "enabled":
                 raise ValueError(
                     f"{self.model_name} does not support manual extended thinking "

@@ -20,9 +20,7 @@ def _langfuse_enabled() -> bool:
     return os.getenv("LANGFUSE_ENABLED", "true").strip().lower() not in FALSE_ENV_VALUES
 
 
-def _create_langfuse_config(
-    *, max_concurrency: int | None = None
-) -> dict[str, Any]:
+def _create_langfuse_config(*, max_concurrency: int | None = None) -> dict[str, Any]:
     config: dict[str, Any] = {"callbacks": [CallbackHandler()]}
     if max_concurrency is not None:
         config["max_concurrency"] = max_concurrency

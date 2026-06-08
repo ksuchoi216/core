@@ -1,0 +1,160 @@
+student_record_summary:
+  generator:
+    provider: "openai"
+    model_name: "gpt-4.1"
+    prompt_cache_key: "summary_generator"
+    temperature: 0
+  evaluator:
+    provider: "openai"
+    model_name: "gpt-4.1-mini"
+    prompt_cache_key: "summary_evaluator"
+    temperature: 0
+
+sentence_extraction:
+  generator:
+    provider: "openai"
+    model_name: "gpt-5.4"
+    prompt_cache_key: "extraction_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  qa_tester:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "extraction_qatester"
+    reasoning:
+      effort: "none"
+    verbosity: "low"
+  evaluator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "extraction_evaluator"
+    reasoning:
+      effort: "none"
+    verbosity: "low"
+
+final_goal:
+  goal_generator:
+    provider: "openai"
+    model_name: "gpt-5.4"
+    prompt_cache_key: "goal_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  goal_selector:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "goal_selector"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  goal_evaluator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "goal_evaluator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  goal_regenerator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "goal_regenerator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+
+steps:
+  step_generator:
+    provider: "openai"
+    model_name: "gpt-5.4"
+    prompt_cache_key: "step_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  step_evaluator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "step_evaluator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+
+keywords:
+  keyword_generator:
+    provider: "openai"
+    model_name: "gpt-5.4"
+    prompt_cache_key: "keyword_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  keyword_evaluator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "keyword_evaluator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+
+assignment:
+  generator:
+    provider: "openai"
+    model_name: "gpt-5.4"
+    prompt_cache_key: "assignment_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  evaluator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "assignment_evaluator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+
+writing_content:
+  generator:
+    provider: "openai"
+    model_name: "gpt-5.4"
+    prompt_cache_key: "writing_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+  evaluator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "writing_evaluator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+
+
+score:
+  generator:
+    provider: "openai"
+    model_name: "gpt-5.4-mini"
+    prompt_cache_key: "score_generator"
+    reasoning:
+      effort: "medium"
+    verbosity: "low"
+
+organization:
+  organizer:
+    provider: "openai"
+    model_name: "gpt-4.1"
+    use_responses_api: true
+    prompt_cache_key: "document_organizer"
+    temperature: 0
+
+  organizer_for_3rd_grade:
+    provider: "openai"
+    model_name: "gpt-4.1"
+    use_responses_api: true
+    prompt_cache_key: "document_organizer_3rd_grade"
+    temperature: 0
+
+  text_organizer_for_3rd_grade:
+    provider: "openai"
+    model_name: "gpt-4.1"
+    use_responses_api: true
+    prompt_cache_key: "document_text_organizer_3rd_grade"
+    temperature: 0

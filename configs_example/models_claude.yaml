@@ -1,0 +1,207 @@
+student_record_summary:
+  generator:
+    provider: "claude"
+    model_name: "claude-sonnet-4-6"
+    temperature: 0
+    max_tokens: 8192
+    prompt_cache:
+      type: "ephemeral"
+  evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 10000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+sentence_extraction:
+  generator:
+    provider: "claude"
+    model_name: "claude-opus-4-8"
+    max_tokens: 50000
+    thinking:
+      type: "adaptive"
+    output_config:
+      effort: "medium"
+    prompt_cache:
+      type: "ephemeral"
+  qa_tester:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 50000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+  evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 50000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+final_goal:
+  goal_generator:
+    provider: "claude"
+    model_name: "claude-opus-4-8"
+    max_tokens: 7000
+    thinking:
+      type: "adaptive"
+    output_config:
+      effort: "medium"
+    prompt_cache:
+      type: "ephemeral"
+  goal_selector:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 7000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+  goal_evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 7000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+  goal_regenerator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 7000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+steps:
+  step_generator:
+    provider: "claude"
+    model_name: "claude-opus-4-8"
+    max_tokens: 4000
+    thinking:
+      type: "adaptive"
+    output_config:
+      effort: "medium"
+    prompt_cache:
+      type: "ephemeral"
+  step_evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 4000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+keywords:
+  keyword_generator:
+    provider: "claude"
+    model_name: "claude-opus-4-8"
+    max_tokens: 4000
+    thinking:
+      type: "adaptive"
+    output_config:
+      effort: "medium"
+    prompt_cache:
+      type: "ephemeral"
+  keyword_evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 4000
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+assignment:
+  generator:
+    provider: "claude"
+    model_name: "claude-opus-4-8"
+    max_tokens: 16000
+    thinking:
+      type: "adaptive"
+    output_config:
+      effort: "medium"
+    prompt_cache:
+      type: "ephemeral"
+  evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 8192
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+writing_content:
+  generator:
+    provider: "claude"
+    model_name: "claude-opus-4-8"
+    max_tokens: 16000
+    thinking:
+      type: "adaptive"
+    output_config:
+      effort: "medium"
+    prompt_cache:
+      type: "ephemeral"
+  evaluator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 8192
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+
+score:
+  generator:
+    provider: "claude"
+    model_name: "claude-haiku-4-5"
+    max_tokens: 8192
+    thinking:
+      type: "enabled"
+      budget_tokens: 2048
+    prompt_cache:
+      type: "ephemeral"
+
+organization:
+  organizer:
+    provider: "claude"
+    model_name: "claude-sonnet-4-6"
+    temperature: 0
+    max_tokens: 8192
+    prompt_cache:
+      type: "ephemeral"
+
+  organizer_for_3rd_grade:
+    provider: "claude"
+    model_name: "claude-sonnet-4-6"
+    temperature: 0
+    max_tokens: 8192
+    prompt_cache:
+      type: "ephemeral"
+
+  text_organizer_for_3rd_grade:
+    provider: "claude"
+    model_name: "claude-sonnet-4-6"
+    temperature: 0
+    max_tokens: 8192
+    prompt_cache:
+      type: "ephemeral"

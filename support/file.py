@@ -105,8 +105,14 @@ def save_file(data: Any, path: str | Path):
                     "Data must be a pandas DataFrame for CSV format.",
                 )
         elif extension == "json":
+            import dataclasses
+            class DataclassEncoder(json.JSONEncoder):
+                def default(self, o):
+                    if dataclasses.is_dataclass(o):
+                        return dataclasses.asdict(o)
+                    return super().default(o)
             with open(path, "w", encoding="utf-8-sig") as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
+                json.dump(data, f, ensure_ascii=False, indent=4, cls=DataclassEncoder)
         elif extension == "yaml":
             import yaml
 

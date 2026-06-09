@@ -1,7 +1,11 @@
 import argparse
 from dotenv import find_dotenv, load_dotenv
 
-from core.langfuse import download_prompts_from_local, change_project_keys_from_env
+from core.langfuse import (
+    download_prompts_from_local,
+    change_project_keys_from_env,
+    create_prompt_keys_from_local_prompt_dir,
+)
 from core.langfuse.prompt import DEFAULT_LOCAL_PROMPT_DIR, DEFAULT_PROMPT_KEYS_PATH
 
 if __name__ == "__main__":
@@ -33,6 +37,11 @@ if __name__ == "__main__":
 
     if args.project:
         change_project_keys_from_env(args.project)
+
+    create_prompt_keys_from_local_prompt_dir(
+        local_prompt_dir=args.prompt_dir,
+        list_save_path=args.input,
+    )
 
     download_prompts_from_local(
         local_prompt_dir=args.prompt_dir,

@@ -18,7 +18,7 @@ def load_file(path: str | Path) -> Any:
         path = path.as_posix()
     extension = path.split(".")[-1]
     try:
-        if extension == "txt":
+        if extension in ["txt", "md"]:
             with open(path, "r", encoding="utf-8") as f:
                 loaded_file = f.read()
         elif extension == "csv":
@@ -73,7 +73,7 @@ def save_file(data: Any, path: str | Path):
     sub_folder = os.path.basename(path)
     extension = sub_folder.split(".")[-1]
     try:
-        if extension == "txt":
+        if extension in ["txt", "md"]:
             with open(path, "w", encoding="utf-8-sig") as f:
                 f.write(data)
         elif extension == "csv":

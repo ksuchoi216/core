@@ -165,7 +165,7 @@ class GeneralNode:
     ) -> Any:
         return self.chain.invoke(self._add_format_instructions(inputs), config=config)
 
-    def __call__(self):
+    def build(self):
         self._preprocess()
 
         def node(
@@ -194,3 +194,6 @@ class GeneralNode:
             return self._output_to_state(state=state, output=output)
 
         return node
+
+    def __call__(self):
+        return self.build()

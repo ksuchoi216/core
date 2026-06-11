@@ -10,7 +10,7 @@ from langfuse import observe, propagate_attributes
 from langfuse.langchain import CallbackHandler
 from loguru import logger
 
-PROMPT_FILE_SUFFIX = ".txt"
+PROMPT_FILE_SUFFIX = ".md"
 DEFAULT_LOCAL_PROMPT_DIR = Path(__file__).resolve().parents[2] / "prompts"
 DEFAULT_PROMPT_KEYS_PATH = (
     Path(__file__).resolve().parents[2] / "configs" / "prompt_keys.yaml"

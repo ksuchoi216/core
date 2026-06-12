@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+from typing import Literal
 from pathlib import Path
 
 from core.support.file import load_file, save_file
 import os
 
 from langchain_core.prompts import BasePromptTemplate
-from langfuse import observe, propagate_attributes
-from langfuse.langchain import CallbackHandler
 from loguru import logger
 
 PROMPT_FILE_SUFFIX = ".md"
@@ -119,9 +118,10 @@ def upload_prompt(
     prompt_dir: str | Path | None = "prompts",
     tags: list[str] | None = None,
     labels: list[str] | None = None,
-) -> None:
+) -> Literal["uploaded", "skipped"]:
     try:
         from langfuse import get_client
+        from langfuse.api.core.api_error import ApiError
     except ImportError as exc:
         raise RuntimeError(
             "Langfuse is required to upload prompt keys. Install langfuse first."
@@ -135,7 +135,27 @@ def upload_prompt(
     if labels is None:
         labels = ["production"]
 
-    get_client().create_prompt(
+    client = get_client()
+
+    try:
+        remote_prompt = client.get_prompt(
+            prompt_key,
+            label="production",
+            type="text",
+            cache_ttl_seconds=0,
+        )
+    except ApiError as exc:
+        if exc.status_code != 404:
+            raise
+    else:
+        if remote_prompt.prompt == prompt_text:
+            logger.info(
+                "Prompt {} skipped because local content matches Langfuse production.",
+                prompt_key,
+            )
+            return "skipped"
+
+    client.create_prompt(
         name=prompt_key,
         prompt=prompt_text,
         labels=labels,
@@ -143,6 +163,7 @@ def upload_prompt(
         type="text",
     )
     logger.info("Prompt {} uploaded from {} to Langfuse.", prompt_key, prompt_path)
+    return "uploaded"
 
 
 def load_prompt_keys(
@@ -200,12 +221,13 @@ def upload_prompts_from_local(
             continue
 
         try:
-            upload_prompt(
+            status = upload_prompt(
                 prompt_key,
                 prompt_dir=local_prompt_dir,
                 tags=tags,
                 labels=labels,
             )
+            logger.info("Prompt {} {}.", prompt_key, status)
         except Exception as e:
             logger.exception("Failed to upload prompt {}: {}", prompt_key, e)
 
